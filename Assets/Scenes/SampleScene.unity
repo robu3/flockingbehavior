@@ -149,15 +149,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa29466c2a0f8954dbc31fb5ff21dbe6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  BoidCount: 500
+  BoidCount: 200
   BoidPrefab: {fileID: 5309252082832502175, guid: 4b54adc15fa9e034894654c004463328,
     type: 3}
-  Formation: 0
   BoidVision: 40
   BoidSpeed: 0.1
   BoidDistance: 2
   BoidMoveThreshold: 0.5
-  SubdivisionCellSize: 5
+  SubdivisionCellSize: 10
   FollowTarget: {fileID: 522893873}
   FollowDistance: 5
   MotivationFollow: 0.1
@@ -165,7 +164,7 @@ MonoBehaviour:
   MotivationSeparate: 2
   MotivationFlocking: 1
   SpawnRadius: 30
-  FlockBounds: 100
+  FlockRadius: 100
 --- !u!4 &140341525
 Transform:
   m_ObjectHideFlags: 0
