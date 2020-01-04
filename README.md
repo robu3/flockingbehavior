@@ -4,8 +4,17 @@ This is an implementation of [flocking behavior](https://en.wikipedia.org/wiki/F
 
 Bin-lattice spatial subdivision is used to improve performance; my computer can easily handle flocks of ~200 boids (bird-thingies) at 200 FPS. The `FlockingBehavior` has numerous properties to drive boid motivations and behavior.
 
+Below is an example of a flock with loose steering and no boid colliders; it reminds a bit of a flock of starlings:
 
-![Input](/flocking.gif?raw=true)
+![No Collider](/flocking_no_collider.gif?raw=true)
+
+Another example with tighter steering and boid colliders:
+
+![With Collider](/flocking_collider.gif?raw=true)
+
+Gizmos on the flock include a grid illustrating the bin-lattice spatial subdivision, which can be helpful when tweaking the flock settings.
+
+![Gizmos](/gizmos.png?raw=true)
 
 ## TODO
 

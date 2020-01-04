@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7020271797546792883}
   - component: {fileID: 5756742641214452991}
   m_Layer: 0
-  m_Name: CubeBoid - Physics
+  m_Name: CubeBoid - Collider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -107,5 +107,5 @@ Rigidbody:
   m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 104
+  m_Constraints: 120
   m_CollisionDetection: 0
