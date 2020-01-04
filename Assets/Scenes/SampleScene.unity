@@ -153,16 +153,17 @@ MonoBehaviour:
   BoidPrefab: {fileID: 5309252082832502175, guid: 4b54adc15fa9e034894654c004463328,
     type: 3}
   BoidVision: 40
-  BoidSpeed: 0.1
+  BoidSpeed: 0.5
+  BoidSteer: 0.1
   BoidDistance: 2
-  BoidMoveThreshold: 0.5
+  BoidMoveThreshold: 0
   SubdivisionCellSize: 10
   FollowTarget: {fileID: 522893873}
   FollowDistance: 5
-  MotivationFollow: 0.1
-  MotivationFollowSeparate: 2
+  MotivationFollow: 1
+  MotivationFollowSeparate: 5
   MotivationSeparate: 2
-  MotivationFlocking: 1
+  MotivationFlocking: 0.01
   SpawnRadius: 30
   FlockRadius: 100
 --- !u!4 &140341525

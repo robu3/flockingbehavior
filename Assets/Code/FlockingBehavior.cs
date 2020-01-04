@@ -30,6 +30,11 @@ public class FlockingBehavior : MonoBehaviour
     public float BoidSpeed = 1f;
 
     /// <summary>
+    /// How well a boid steers itself.
+    /// </summary>
+    public float BoidSteer = 1f;
+
+    /// <summary>
     /// A boid's preferred distance from its brethren.
     /// </summary>
     public float BoidDistance = 1f;
@@ -68,6 +73,9 @@ public class FlockingBehavior : MonoBehaviour
     /// </summary>
     List<GameObject>[,] Space { get; set; }
 
+    private Dictionary<GameObject, Vector3> _boidVelocities;
+    private Dictionary<GameObject, Vector3> _boidAccelerations;
+
     private Rect _spaceDims;
     private Rect _cellDims;
 
@@ -90,6 +98,8 @@ public class FlockingBehavior : MonoBehaviour
     private void Initialize()
     {
         this.Boids = new List<GameObject>();
+        this._boidVelocities = new Dictionary<GameObject, Vector3>();
+        this._boidAccelerations = new Dictionary<GameObject, Vector3>();
 
         // spawn boids at a random position in the spawn area
         for (int i = 0; i < this.BoidCount; i++)
@@ -100,6 +110,8 @@ public class FlockingBehavior : MonoBehaviour
             boid.transform.parent = this.transform;
 
             this.Boids.Add(boid);
+            this._boidVelocities[boid] = Vector3.zero;
+            this._boidAccelerations[boid] = Vector3.zero;
         }
     }
 
@@ -192,13 +204,15 @@ public class FlockingBehavior : MonoBehaviour
                 {
                     foreach (GameObject b in boids)
                     {
-                        // stop movement when outside the flock radius
+                        // fail-safe: stop movement when outside the flock radius
                         if (FlockRadius > 0f && Vector3.Distance(transform.position, b.transform.position) > FlockRadius)
                         {
                             continue;
                         }
 
                         // calculate and apply our movement forces
+                        Vector3 velocity = _boidVelocities[b];
+                        Vector3 acceleration = _boidAccelerations[b];
                         Vector3 move = Vector3.zero;
 
                         // check our neighbors to calculate forces relative to them
@@ -231,7 +245,13 @@ public class FlockingBehavior : MonoBehaviour
 
                         // apply the combined movement force
                         move = move.normalized * BoidSpeed;
-                        b.transform.position += move;
+
+                        Vector3 steer = move - velocity;
+                        steer = Limit(steer, BoidSteer);
+                        b.transform.position += steer;
+
+                        _boidVelocities[b] = velocity;
+                        _boidAccelerations[b] = steer;
 
                         // only look towards the follow target
                         b.transform.LookAt(b.transform.position + forceFollow);
@@ -239,6 +259,22 @@ public class FlockingBehavior : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Limits a vector's magnitude to the specified maximum.
+    /// </summary>
+    /// <param name="v"></param>
+    /// <param name="max"></param>
+    /// <returns></returns>
+    private Vector3 Limit(Vector3 v, float max)
+    {
+        if (v.magnitude > max)
+        {
+            v = v.normalized * max;
+        }
+
+        return v;
     }
 
     /// <summary>
@@ -306,7 +342,9 @@ public class FlockingBehavior : MonoBehaviour
             {
                 if (distance.magnitude > FollowDistance)
                 {
-                    move = distance;
+                    // decrease the magnitude the closer we are to the target
+                    float mag = (distance.magnitude - FollowDistance) / FollowDistance;
+                    move = distance.normalized * Mathf.Min(mag, 1f);
                 }
             }
         }
@@ -347,7 +385,7 @@ public class FlockingBehavior : MonoBehaviour
             }
         }
 
-        return move;
+        return move.normalized;
     }
 
     public void OnDrawGizmos()
