@@ -60,11 +60,39 @@ public class FlockingBehavior : MonoBehaviour
     /// </summary>
     public float FollowDistance = 1f;
 
+    /// <summary>
+    /// The distance from the target at which the boid will begin to stop (slow down).
+    /// </summary>
+    public float FollowStopDistance = 1f;
+
+    /// <summary>
+    /// Motivation to follow the target.
+    /// </summary>
     public float MotivationFollow = 1f;
+
+    /// <summary>
+    /// Motivation to keep distance between the boid and the target.
+    /// </summary>
     public float MotivationFollowSeparate = 1f;
+
+    /// <summary>
+    /// Motivation to for boids to keep distance between themselves.
+    /// </summary>
     public float MotivationSeparate = 1f;
+
+    /// <summary>
+    /// Motivation for boids to flock/congregate together.
+    /// </summary>
     public float MotivationFlocking = 1f;
+
+    /// <summary>
+    /// Initial boid spawn radius.
+    /// </summary>
     public float SpawnRadius = 30f;
+
+    /// <summary>
+    /// The "bounds" of the flock. Boids outside this radius will stop moving.
+    /// </summary>
     public float FlockRadius = 30f;
 
     /// <summary>
@@ -72,9 +100,6 @@ public class FlockingBehavior : MonoBehaviour
     /// This subdivided space is used to optimize the process of boids finding their neighbors in the flock.
     /// </summary>
     List<GameObject>[,] Space { get; set; }
-
-    private Dictionary<GameObject, Vector3> _boidVelocities;
-    private Dictionary<GameObject, Vector3> _boidAccelerations;
 
     private Rect _spaceDims;
     private Rect _cellDims;
@@ -98,8 +123,6 @@ public class FlockingBehavior : MonoBehaviour
     private void Initialize()
     {
         this.Boids = new List<GameObject>();
-        this._boidVelocities = new Dictionary<GameObject, Vector3>();
-        this._boidAccelerations = new Dictionary<GameObject, Vector3>();
 
         // spawn boids at a random position in the spawn area
         for (int i = 0; i < this.BoidCount; i++)
@@ -110,8 +133,6 @@ public class FlockingBehavior : MonoBehaviour
             boid.transform.parent = this.transform;
 
             this.Boids.Add(boid);
-            this._boidVelocities[boid] = Vector3.zero;
-            this._boidAccelerations[boid] = Vector3.zero;
         }
     }
 
@@ -204,15 +225,22 @@ public class FlockingBehavior : MonoBehaviour
                 {
                     foreach (GameObject b in boids)
                     {
+                        Rigidbody rb = b.GetComponent<Rigidbody>();
+
+                        if (rb == null)
+                        {
+                            throw new System.Exception("Boid is missing rigidbody component.");
+                        }
+
                         // fail-safe: stop movement when outside the flock radius
                         if (FlockRadius > 0f && Vector3.Distance(transform.position, b.transform.position) > FlockRadius)
                         {
+                            rb.velocity = Vector3.zero;
                             continue;
                         }
 
                         // calculate and apply our movement forces
-                        Vector3 velocity = _boidVelocities[b];
-                        Vector3 acceleration = _boidAccelerations[b];
+                        Vector3 velocity = rb.velocity;
                         Vector3 move = Vector3.zero;
 
                         // check our neighbors to calculate forces relative to them
@@ -248,10 +276,8 @@ public class FlockingBehavior : MonoBehaviour
 
                         Vector3 steer = move - velocity;
                         steer = Limit(steer, BoidSteer);
-                        b.transform.position += steer;
 
-                        _boidVelocities[b] = velocity;
-                        _boidAccelerations[b] = steer;
+                        rb.AddForce(steer);
 
                         // only look towards the follow target
                         b.transform.LookAt(b.transform.position + forceFollow);
@@ -275,6 +301,25 @@ public class FlockingBehavior : MonoBehaviour
         }
 
         return v;
+    }
+
+    /// <summary>
+    /// Maps a value from on range into another.
+    /// </summary>
+    /// <param name="min"></param>
+    /// <param name="max"></param>
+    /// <param name="desiredMin"></param>
+    /// <param name="desiredMax"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    private float Map(float value, float min, float max, float desiredMin, float desiredMax)
+    {
+        if (value < min || value > max)
+        {
+            throw new System.ArgumentException("value is outside of the specified starting range.");
+        }
+
+        return (value - min) * (desiredMax - desiredMin) / (max - min) + desiredMin;
     }
 
     /// <summary>
@@ -304,7 +349,6 @@ public class FlockingBehavior : MonoBehaviour
             {
                 if (distance.magnitude == 0f)
                 {
-                    Debug.LogWarning("zero distance");
                     distance = new Vector3(Random.value, Random.value);
                     continue;
                 }
@@ -343,8 +387,18 @@ public class FlockingBehavior : MonoBehaviour
                 if (distance.magnitude > FollowDistance)
                 {
                     // decrease the magnitude the closer we are to the target
-                    float mag = (distance.magnitude - FollowDistance) / FollowDistance;
-                    move = distance.normalized * Mathf.Min(mag, 1f);
+                    float mag;
+
+                    if (distance.magnitude < FollowStopDistance)
+                    {
+                        mag = Map(distance.magnitude, 0, FollowStopDistance, 0, BoidSpeed);
+                    }
+                    else
+                    {
+                        mag = distance.magnitude;
+                    }
+
+                    move = distance.normalized * mag;
                 }
             }
         }
